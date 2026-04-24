@@ -1,0 +1,14 @@
+# Objects and archives
+*.o
+*.a
+
+# Executables
+server
+
+# Editor temp files
+*~
+*.swp
+*.swo
+
+# VS Code settings
+.vscode/
