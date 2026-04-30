@@ -1,6 +1,6 @@
 #include "server.h"
-#include "response.h"
 #include "request_parser.h"
+#include "file_handler.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,24 +10,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#define HTTP_RESPONSE_BUFFER_SIZE 512
 #define REQUEST_BUFFER_SIZE 4096
 
 /**
- * send_welcome_response - Sends a static welcome HTTP response
- * @client_socket: The connected client socket
- */
-void send_welcome_response(int client_socket)
-{
-	char http_response[HTTP_RESPONSE_BUFFER_SIZE];
-
-	build_http_response(http_response, sizeof(http_response),
-			    "Hello from your C web server!");
-	send_http_response(client_socket, http_response);
-}
-
-/**
- * handle_client - Receives, parses, and responds to a single client
+ * handle_client - Receives, parses, and serves a file to a client
  * @client_socket: The socket connected to the client
  */
 void handle_client(int client_socket)
@@ -66,10 +52,10 @@ void handle_client(int client_socket)
 	       request.method, request.path);
 
 	/*
-	 * Day 3 will use request.path to serve files.
-	 * For now, still a static response.
+	 * Serve the requested file.
+	 * If the file doesn't exist, serve_file sends a 404.
 	 */
-	send_welcome_response(client_socket);
+	serve_file(client_socket, request.path);
 }
 
 /**
