@@ -1,6 +1,7 @@
 #include "server.h"
 #include "request_parser.h"
 #include "file_handler.h"
+#include "dispatcher.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -51,10 +52,6 @@ void handle_client(int client_socket)
 	printf("[INFO] Method: %s, Path: %s\n",
 	       request.method, request.path);
 
-	/*
-	 * Serve the requested file.
-	 * If the file doesn't exist, serve_file sends a 404.
-	 */
 	serve_file(client_socket, request.path);
 }
 
@@ -87,7 +84,7 @@ bool accept_client_connection(int server_socket, int *client_socket)
 }
 
 /**
- * run_accept_loop - Continuously accepts and handles clients
+ * run_accept_loop - Continuously accepts and dispatches clients
  * @server_socket: The listening socket
  * @port: The bound port (used for logging)
  */
@@ -102,8 +99,7 @@ void run_accept_loop(int server_socket, int port)
 		if (!accept_client_connection(server_socket, &client_socket))
 			continue;
 
-		handle_client(client_socket);
-		close(client_socket);
-		printf("[INFO] Client disconnected.\n");
+		dispatch_client(client_socket, handle_client);
+		printf("[INFO] Client dispatched.\n");
 	}
 }

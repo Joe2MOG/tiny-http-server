@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 
 /**
  * main - Entry point for the HTTP server
@@ -10,6 +11,7 @@
  * @argv: Argument vector
  * Return: EXIT_SUCCESS on success, EXIT_FAILURE on error
  */
+
 int main(int argc, char *argv[])
 {
 	int port;
@@ -25,6 +27,8 @@ int main(int argc, char *argv[])
 	server_socket = create_listening_socket(port);
 	if (server_socket == -1)
 		exit(EXIT_FAILURE);
+
+	signal(SIGCHLD, SIG_IGN);   /* auto-reap children */
 
 	run_accept_loop(server_socket, port);
 	close(server_socket);   /* unreachable */
