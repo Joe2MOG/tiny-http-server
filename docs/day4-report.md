@@ -3,7 +3,7 @@ Day 4 Report: Concurrency via Dispatcher and fork()
 Project: Tiny HTTP Server
 Goal: Add concurrency so the server can handle multiple clients
 simultaneously, without rewriting existing logic.
-Date: [insert date]
+Date: 5/01/2026
 
 1. What Was Built
 
