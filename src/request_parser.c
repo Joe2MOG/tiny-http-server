@@ -60,6 +60,7 @@ bool extract_request_line(const char *raw_request, char *line_buffer,
 bool parse_request_line(const char *request_line, struct Request *request)
 {
 	int i;
+	char *question;
 
 	if (!request)
 		return (false);
@@ -73,5 +74,33 @@ bool parse_request_line(const char *request_line, struct Request *request)
 		if (request->method[i] < 'A' || request->method[i] > 'Z')
 			return (false);
 	}
+
+	question = strchr(request->path, '?');
+	if (question)
+	{
+		*question = '\0';
+		strncpy(request->query_string, question + 1,
+			sizeof(request->query_string) - 1);
+		request->query_string[sizeof(request->query_string) - 1] = '\0';
+	}
+	else
+	{
+		request->query_string[0] = '\0';
+	}
 	return (true);
+}
+
+/**
+ * skip_headers - Finds the end of the HTTP headers in the raw request
+ * @raw_request: The full request buffer
+ * Return: Pointer to byte after the double CRLF, or NULL if incomplete
+ */
+const char *skip_headers(const char *raw_request)
+{
+	const char *end_of_headers;
+
+	end_of_headers = strstr(raw_request, "\r\n\r\n");
+	if (!end_of_headers)
+		return (NULL);
+	return (end_of_headers + 4);
 }

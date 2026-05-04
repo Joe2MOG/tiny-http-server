@@ -1,7 +1,8 @@
 #include "server.h"
 #include "request_parser.h"
 #include "file_handler.h"
-#include "dispatcher.h"
+#include "error_handler.h"
+#include "cgi_handler.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,12 +11,51 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include "dispatcher.h"
 
 #define REQUEST_BUFFER_SIZE 4096
 
 /**
- * handle_client - Receives, parses, and serves a file to a client
- * @client_socket: The socket connected to the client
+ * route_request - Validates headers, checks method, and serves content
+ * @client_socket: Connected client socket
+ * @request: Parsed request
+ * @raw_request: The raw request buffer (used for header validation)
+ */
+static void route_request(int client_socket, const struct Request *request,
+			  const char *raw_request)
+{
+	/* Check that the full HTTP headers were received */
+	if (skip_headers(raw_request) == NULL)
+	{
+		printf("[WARN] Incomplete headers\n");
+		return;
+	}
+
+	/* Only GET is implemented */
+	if (strcmp(request->method, "GET") != 0)
+	{
+		send_501_response(client_socket);
+		return;
+	}
+
+	/* CGI request? */
+	if (strncmp(request->path, "/cgi-bin/", 9) == 0)
+	{
+		char script_path[1024];
+
+		snprintf(script_path, sizeof(script_path), "www%s",
+			 request->path);
+		serve_cgi(client_socket, script_path, request->query_string);
+	}
+	else
+	{
+		serve_file(client_socket, request->path);
+	}
+}
+
+/**
+ * handle_client - Receives, parses, and dispatches a client request
+ * @client_socket: Socket connected to the client
  */
 void handle_client(int client_socket)
 {
@@ -49,10 +89,10 @@ void handle_client(int client_socket)
 		printf("[WARN] Could not parse method/path\n");
 		return;
 	}
-	printf("[INFO] Method: %s, Path: %s\n",
-	       request.method, request.path);
+	printf("[INFO] Method: %s, Path: %s, Query: %s\n",
+	       request.method, request.path, request.query_string);
 
-	serve_file(client_socket, request.path);
+	route_request(client_socket, &request, raw_request);
 }
 
 /**

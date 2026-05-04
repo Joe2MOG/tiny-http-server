@@ -2,8 +2,8 @@
 #include "server.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <signal.h>
+#include <signal.h>    /* for signal */
+#include <unistd.h>    /* for close */
 
 /**
  * main - Entry point for the HTTP server
@@ -11,7 +11,6 @@
  * @argv: Argument vector
  * Return: EXIT_SUCCESS on success, EXIT_FAILURE on error
  */
-
 int main(int argc, char *argv[])
 {
 	int port;
@@ -29,6 +28,7 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 
 	signal(SIGCHLD, SIG_IGN);   /* auto-reap children */
+	signal(SIGPIPE, SIG_IGN);   /* avoid crash on broken pipe */
 
 	run_accept_loop(server_socket, port);
 	close(server_socket);   /* unreachable */
